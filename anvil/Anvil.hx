@@ -7,8 +7,9 @@ using Lambda;
 
 import sys.io.File;
 import sys.FileSystem;
-import haxe.io.Path;
 import haxe.PosInfos;
+
+using haxe.io.Path;
 
 typedef AnvilConfig = {
 	var ammerLib:String; // e.g. what you used to define -D ammer.lib.<ammerLib>.library etc...
@@ -54,20 +55,18 @@ class Anvil {
 		final thisPath = new haxe.io.Path(FileSystem.fullPath(pos.fileName));
 		var basePath = new haxe.io.Path(FileSystem.fullPath('${thisPath.dir}'));
 		while (!getAnvilConfig(basePath)) {
-            basePath = new Path(FileSystem.fullPath('${basePath.dir}'));
-        }
+			basePath = new Path(FileSystem.fullPath('${basePath.dir}'));
+		}
 		nativeLibraryDirectory = new Path(haxe.io.Path.join([basePath.toString(), config.nativePath]));
 	}
 
 	static function getAnvilConfig(basePath:Path) {
 		var configPath = '$basePath\\.anvilrc';
 		if (!FileSystem.exists(configPath)) {
-            
-            trace('$configPath does not exist, trying $basePath');
 			return false;
 		}
-        config = haxe.Json.parse(sys.io.File.getContent(configPath));
-        trace('$configPath exists');
+		config = haxe.Json.parse(sys.io.File.getContent(configPath));
+
 		return true;
 	}
 
@@ -135,17 +134,20 @@ class Anvil {
 		if (!Context.defined('anvil.output')) {
 			final platform = Context.defined('hl') ? 'hl' : Context.defined('lua') ? 'lua' : Context.defined('cpp') ? 'cpp' : '';
 			outputDir = 'bin\\$platform';
-			trace('-D anvil-output flag missing, outputting to default folder "$outputDir"');
+			if (config.verbose)
+				Context.warning('-D anvil.output flag missing, outputting to default folder "$outputDir"');
 		} else {
 			outputDir = Context.definedValue('anvil.output');
 		}
+		#else
+		// if()
 		#end
-		trace('outputDir: $outputDir');
+
 		var fullOutputDir = Path.join([runningDirectory.toString(), outputDir]);
 		if (!FileSystem.exists(fullOutputDir))
 			FileSystem.createDirectory(fullOutputDir);
 		for (lib in results.libs) {
-			copyFile(lib, new Path(FileSystem.fullPath(Path.join([fullOutputDir, lib.file + '.${lib.ext}']))));
+			copyFile(lib, new Path(FileSystem.fullPath(Path.join([fullOutputDir, lib.file.withExtension(lib.ext)]))));
 		}
 	}
 }

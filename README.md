@@ -8,6 +8,11 @@ Anvil will allow users of a native library extension to build normally without h
 
 It provides a simple interface for library authors to integrate their C/C++ build infrastructure into their haxelib.
 
+## TODO
+
+Test MinGW
+Test GC/Linux/OSX
+
 ## How it works
 
 Anvil provides a simple build script to simulate a cohesive Haxe/native extension build for a given native library.

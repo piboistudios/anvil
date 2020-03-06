@@ -1,0 +1,5 @@
+*.dll
+*.exp
+*.obj
+*.lib
+native_extensions/**

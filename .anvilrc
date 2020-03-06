@@ -1,6 +1,6 @@
 {
     "ammerLib": "odbc",
-    "nativePath": "library/odbc_native",
+    "nativePath": "native/odbc_native",
     "buildCmd": "nmake /f Makefile.msvc",
     "verbose":false
 
