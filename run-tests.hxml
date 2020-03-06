@@ -1,0 +1,9 @@
+-lib tink_unittest
+-lib tink_core
+-D anvil.output=bin/hl
+-cp tests
+-main RunTests
+--each
+--interp
+--next
+--macro anvil.Anvil.run()

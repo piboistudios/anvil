@@ -1,0 +1,11 @@
+{
+    "name": "anvil",
+    "url": "https://github.com/piboistudios/anvil/",
+    "license": "Public",
+    "tags": ["haxe","ammer", "native", "ffi", "build"],
+    "description": "The (first) library for Ammer library authors",
+    "version": "0.0.1",
+    "classPath": "./",
+    "releasenotes": "Initial release",
+    "contributors": ["piboistudios"]
+}

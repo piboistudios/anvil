@@ -1,0 +1,10 @@
+all: odbc.dll
+    @:
+
+odbc.dll: odbc.obj
+    cl /LD odbc.obj /link /OUT:odbc.dll odbc32.lib
+
+odbc.obj: odbc.c
+    cl /c odbc.c 
+
+.PHONY: all
