@@ -6,7 +6,10 @@ A build tool for Haxe native extensions built using [`ammer`](https://github.com
 
 anvil will allow users of a native library extension to build normally without having to perform native build maintenance tasks (like manually building the native code, or moving the binaries to projects that use it).
 
-It provides a simple interface for library authors to integrate their C/C++ build infrastructure into their haxelib.
+It provides a single class that provides a single static entry method for library authors to integrate their C/C++ build infrastructure into their haxelib.
+
+In short, it will make sure all of your library files end up in the right place to be consumed by a user of your library, all you need to do is include an initialization macro in your libraries extraParams, and all the user needs to do is include your library (and possibly specify other non-library specific config).
+Not only will building projects with your native extensions build the native code (using your build command), but the Haxe compilation server may do so as well, allowing the IDE to offload native library building to a background service.
 
 ## TODO
 
