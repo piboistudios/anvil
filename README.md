@@ -57,8 +57,14 @@ typedef AnvilConfig = {
 }
 ```
 
+## Library Authors
 
-### Example
+Authors can also use this tool for testing, simply call the same initialization macro you put in `extraParams.hxml` in whatever.hxml file builds/runs your tests.
+
+## Library Users
+
+You can tell `anvil` where your output binaries will be so it can also move the required library binaries to your Have build output by using `-D anvil.output=<path>`
+## Example
 Because the test is located in the same repo as `anvil`, it is hard to tell what `anvil` really does.
 
 Consider this example: 
@@ -77,6 +83,3 @@ Consider this example:
 - Set CWD back to the original running directory
 - Continue regular build process (at this point, your project should be able to be properly linked and utilized by the user)
 
-## Library Authors
-
-Authors can also use this tool for testing, simply call the same initialization macro you put in `extraParams.hxml` in whatever.hxml file builds/runs your tests.
