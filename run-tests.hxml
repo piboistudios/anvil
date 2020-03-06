@@ -5,5 +5,3 @@
 -main RunTests
 --each
 --interp
---next
---macro anvil.Anvil.run()

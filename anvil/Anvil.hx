@@ -11,15 +11,30 @@ import haxe.PosInfos;
 
 using haxe.io.Path;
 
+enum abstract DeployType(String) {
+	var WithUserOutput = 'with-user-output';
+	var ToPath = 'to-path';
+}
+
 typedef AnvilConfig = {
 	var ammerLib:String; // e.g. what you used to define -D ammer.lib.<ammerLib>.library etc...
 	var nativePath:String; // the path to the native code from the root of your project
 	var buildCmd:String; // the build command to run (this will run with the native path as its working directory; ensure all environment variables are set in order for this command to be successful)
+
+	var ?outputBinaries:Array<String>; // list of binaries that need to be processed; if this isn't provided, anvil will infer what binaries to move
+	// if anvil infers this, it will assume that if any library binary exists, the project was already fully built
+	// otherwise it will compare the directory contents to the outputBinaries to determine if the project is already built
+	//  when determining whether or not to skip compilation
 	// i.e. If using MSVC toolchain, vsdevcmd.bat/vsvars32.bat need to be run in the shell before this.
 	var ?buildArgs:Array<String>; // arguments for the build command. This works like Sys.command or new sys.io.Process, can be omitted (with args in cmd name)
 	var ?verbose:Bool; // pipes the stdout of the build command to the stdout of the haxe build command.
 	var ?libPath:String; // where the binaries are, if not at nativePath
 	var ?includePath:String; // where the headers are if not at nativePath
+	var ?deployInfo:{
+		var type:DeployType; // with-user-output or to-path
+		var ?dest:String; // if to-path, the destination path to put built binaries
+	};
+	var ?alwaysRebuild:Bool; // whether to always rebuild the binaries.
 }
 
 typedef BuildResults = {
@@ -28,7 +43,7 @@ typedef BuildResults = {
 
 class Anvil {
 	static var runningDirectory:Path;
-
+	static var haxelibPath = Sys.getEnv('HAXELIB_PATH');
 	static var pos:PosInfos;
 
 	public static function run(?p:haxe.PosInfos) {
@@ -37,8 +52,12 @@ class Anvil {
 		init();
 		copyNativeToTargetDirectory();
 		var results = buildTargetDirectory();
-
-		deployAsDependency(results);
+		switch config.deployInfo.type {
+			case DeployType.WithUserOutput:
+				deployAsDependency(results);
+			case ToPath:
+				deployToDirectory(results);
+		}
 		Sys.setCwd(runningDirectory.toString());
 	}
 
@@ -66,7 +85,7 @@ class Anvil {
 			return false;
 		}
 		config = haxe.Json.parse(sys.io.File.getContent(configPath));
-
+		config.deployInfo = if (config.deployInfo != null) config.deployInfo else {type: WithUserOutput};
 		return true;
 	}
 
@@ -85,10 +104,12 @@ class Anvil {
 			FileSystem.createDirectory(dest.toString());
 		}
 		for (item in FileSystem.readDirectory(dir.toString())) {
+			final fullItemPath = new Path(Path.join([dir.toString(), item]));
+			final fullDestPath = new Path(Path.join([dest.toString(), item]));
 			if (FileSystem.isDirectory(item)) {
-				copyDirectory(dir, new Path(FileSystem.fullPath(Path.join([dest.toString(), item]))));
+				copyDirectory(fullItemPath, fullDestPath);
 			} else {
-				copyFile(new Path(Path.join([dir.toString(), item])), new Path(Path.join([dest.toString(), item])));
+				copyFile(fullItemPath, fullDestPath);
 			}
 		}
 	}
@@ -105,7 +126,21 @@ class Anvil {
 
 	static var targetOutputDirectory:Path;
 
+	static function willSkipBuild(state:BuildResults) {
+		final ret = (config.outputBinaries == null || config.outputBinaries.length == 0) ? state.libs.length != 0 : config.outputBinaries.foreach(bin ->
+			state.libs.exists((lib:Path) -> lib.file.withExtension(lib.ext)
+			.toLowerCase() == bin.toLowerCase()));
+		if (config.verbose && ret)
+			trace("SKIPPING BUILD STEP");
+		return ret;
+	}
+
 	static function buildTargetDirectory() {
+		targetOutputDirectory = new Path(Path.join([targetDirectory.toString(), config.libPath]));
+		final initialState = getBuildResults();
+		if (#if macro !Context.defined('--force-anvil') || #end (willSkipBuild(initialState) && !config.alwaysRebuild)) {
+			return {libs: []};
+		}
 		Sys.setCwd(targetDirectory.toString());
 		if (config.verbose)
 			Sys.command(config.buildCmd, config.buildArgs);
@@ -113,7 +148,7 @@ class Anvil {
 			new sys.io.Process(config.buildCmd, config.buildArgs).exitCode(true);
 		if (!FileSystem.exists(targetDirectory.toString()))
 			FileSystem.createDirectory(targetDirectory.toString());
-		targetOutputDirectory = new Path(Path.join([targetDirectory.toString(), config.libPath]));
+
 		if (!FileSystem.exists(targetOutputDirectory.toString()))
 			FileSystem.createDirectory(targetOutputDirectory.toString());
 		return getBuildResults();
@@ -123,19 +158,21 @@ class Anvil {
 
 	static function getBuildResults():BuildResults {
 		return {
-			libs: FileSystem.readDirectory(targetOutputDirectory.toString())
+			libs: targetOutputDirectory == null ? [] : FileSystem.readDirectory(targetOutputDirectory.toString())
 				.map(file -> new Path(FileSystem.fullPath(Path.join([targetOutputDirectory.toString(), file]))))
 				.filter(fp -> libExtensions.indexOf(fp.ext) != -1)}
 	}
 
 	static function deployAsDependency(results:BuildResults) {
+		if (config.verbose)
+			trace('Deploying ${results.libs} as dependency');
 		var outputDir = "bin";
 		#if macro
 		if (!Context.defined('anvil.output')) {
 			final platform = Context.defined('hl') ? 'hl' : Context.defined('lua') ? 'lua' : Context.defined('cpp') ? 'cpp' : '';
 			outputDir = 'bin\\$platform';
 			if (config.verbose)
-				Context.warning('-D anvil.output flag missing, outputting to default folder "$outputDir"');
+				trace('-D anvil.output flag missing, outputting to default folder "$outputDir"');
 		} else {
 			outputDir = Context.definedValue('anvil.output');
 		}
@@ -146,8 +183,19 @@ class Anvil {
 		var fullOutputDir = Path.join([runningDirectory.toString(), outputDir]);
 		if (!FileSystem.exists(fullOutputDir))
 			FileSystem.createDirectory(fullOutputDir);
+		copyLibsToPath(results, fullOutputDir);
+	}
+
+	static function deployToDirectory(results:BuildResults) {
+		if (config.verbose)
+			trace('Deploying ${results.libs} to ${config.deployInfo.dest}');
+		copyLibsToPath(results, Path.join([runningDirectory.toString(), '${config.deployInfo.dest}']));
+	}
+
+	static function copyLibsToPath(results:BuildResults, deployPath) {
 		for (lib in results.libs) {
-			copyFile(lib, new Path(FileSystem.fullPath(Path.join([fullOutputDir, lib.file.withExtension(lib.ext)]))));
+			copyFile(new Path(FileSystem.fullPath(Path.join([lib.toString()]))),
+				new Path(FileSystem.fullPath(Path.join([deployPath, lib.file.withExtension(lib.ext)]))));
 		}
 	}
 }
