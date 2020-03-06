@@ -8,7 +8,8 @@ anvil will allow users of a native library extension to build normally without h
 
 It provides a single class that provides a single static entry method for library authors to integrate their C/C++ build infrastructure into their haxelib.
 
-In short, it will make sure all of your library files end up in the right place to be consumed by a user of your library, all you need to do is include an initialization macro in your libraries extraParams, and all the user needs to do is include your library (and possibly specify other non-library specific config).
+In short, it will make sure all of your native library source files and binaries end up in the right place to be consumed by a user of your library and will attempt to build the source in the users project (hence the binaries end up in the right place)
+All you need to do is include an initialization macro and an `.anvilrc` config file (JSON) at the root of your libraries project (and an ammer ready library), and all the user needs to do is include your library (and possibly specify other non-library specific config).
 Not only will building projects with your native extensions build the native code (using your build command), but the Haxe compilation server may do so as well, allowing the IDE to offload native library building to a background service.
 
 ## TODO
@@ -75,3 +76,7 @@ Consider this example:
 - Move them to the output folder specified by the user of your library (and other Ammer native extension libraries) with `-D anvil.output=where/user/puts/their/bins`
 - Set CWD back to the original running directory
 - Continue regular build process (at this point, your project should be able to be properly linked and utilized by the user)
+
+## Library Authors
+
+Authors can also use this tool for testing, simply call the same initialization macro you put in `extraParams.hxml` in whatever.hxml file builds/runs your tests.
