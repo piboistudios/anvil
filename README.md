@@ -55,7 +55,7 @@ typedef AnvilConfig = {
 Because the test is located in the same repo as Anvil, it is hard to tell what Anvil really does.
 
 Consider this example: 
-- a user will have a Haxe project probably somewhere, say C:/Code/projects, and it contains an `hxml` (say, `C:/User/Documents/projects/build.hxml`)
+- a user will have a Haxe project probably somewhere, say `C:/User/Documents/projects`, and it contains an `hxml` (say, `C:/User/Documents/projects/build.hxml`)
 -  your library will be located at something like `C:/Users/AppData/Roaming/Haxe/Haxelib/my_native_haxelib_extension/1,0,0,` 
 - The user includes your haxe library, and its `extraParams.hxml` (where you put the Bootsrap code at)
 - The user then runs `haxe build.hxml` at `C:/User/Documents/projects` to build their project including your library
