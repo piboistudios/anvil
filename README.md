@@ -36,11 +36,7 @@ Then in the library's `extraParams.hxml`:
 -D ammer.lib.<ammerLib>.include=<ammerIncludePath>
 --macro SimpleAnvilBootstrap.run()
 ```
-
-This is necessary because Haxe passes a `haxe.PosInfos` object in when no argument is passed in for it, and passing it in from the HXML messes with the file path.
-
 `anvil` determines the root directory of a haxe library (from the source file on the user's computer) by looking in parent directories for an `.anvilrc` file.
-This means that assuming all Haxe package managers maintain a haxe library's project structure, Anvil should be able to identify the project's root and config file and get to work.
 
 The `.anvilrc` is just a JSON representation of this Haxe typedef:
 ```haxe
