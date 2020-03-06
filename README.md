@@ -57,7 +57,9 @@ Because the test is located in the same repo as Anvil, it is hard to tell what A
 Consider this example: 
 - a user will have a Haxe project probably somewhere, say C:/Code/projects, and it contains an `hxml` (say, `C:/User/Documents/projects/build.hxml`)
 -  your library will be located at something like `C:/Users/AppData/Roaming/Haxe/Haxelib/my_native_haxelib_extension/1,0,0,` 
-- The user includes your haxe library, and its `extraParams.hxml` (where you put the Bootsrap code at), the Bootstrap kicks of Ammer:
+- The user includes your haxe library, and its `extraParams.hxml` (where you put the Bootsrap code at)
+- The user then runs `haxe build.hxml` at `C:/User/Documents/projects` to build their project including your library
+- The Bootstrap kicks of Anvil:
 
 - Anvil will then copy the `nativePath` (say `native`) from the `C:/Users/AppData/Roaming/Haxe/Haxelib/my_native_haxelib_extension/1,0,0,/native` directory to `C:/User/Documents/projects/native_extensions/$ammerLib` (say `$ammerLib` is `my_native_lib`)
 - Set the CWD to `C:/User/Documents/projects/native_extensions/my_native_lib`
