@@ -63,7 +63,7 @@ Authors can also use this tool for testing, simply call the same initialization 
 
 ## Library Users
 
-You can tell `anvil` where your output binaries will be so it can also move the required library binaries to your Have build output by using `-D anvil.output=<path>`
+You can tell `anvil` where your output binaries will be so it can also move the required library binaries to your Haxe build output directory by using `-D anvil.output=<path>`
 ## Example
 Because the test is located in the same repo as `anvil`, it is hard to tell what `anvil` really does.
 
