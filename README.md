@@ -4,7 +4,7 @@ A build tool for Haxe native extensions built using [`ammer`](https://github.com
 
 ## What it does
 
-anvil will allow users of a native library extension to build normally without having to perform native build maintenance tasks (like manually building the native code, or moving the binaries to projects that use it).
+`anvil` will allow users of a native library extension to build normally without having to perform native build maintenance tasks (like manually building the native code, or moving the binaries to projects that use it).
 
 It provides a single class that provides a single static entry method for library authors to integrate their C/C++ build infrastructure into their haxelib.
 
@@ -63,7 +63,7 @@ You can tell `anvil` where your output binaries will be so it can also move the 
 ## Example
 Because the test is located in the same repo as `anvil`, it is hard to tell what `anvil` really does.
 
-Consider this example: 
+Use Case: 
 - a user will have a Haxe project probably somewhere, say `C:/User/Documents/projects`, and it contains an `hxml` (say, `C:/User/Documents/projects/build.hxml`)
 -  your library will be located at something like `C:/Users/AppData/Roaming/Haxe/Haxelib/my_native_haxelib_extension/1,0,0,` 
 - The user includes your haxe library, and its `extraParams.hxml` (where you put the Bootsrap code at)
@@ -79,3 +79,5 @@ Consider this example:
 - Set CWD back to the original running directory
 - Continue regular build process (at this point, your project should be able to be properly linked and utilized by the user)
 
+## Projects using `anvil`
+- [`hxdbc`](http://GitHub.com/piboistudios/hxdbc)
