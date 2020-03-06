@@ -45,12 +45,23 @@ typedef AnvilConfig = {
 	var ammerLib:String; // e.g. what you used to define -D ammer.lib.<ammerLib>.library etc...
 	var nativePath:String; // the path to the native code from the root of your project
 	var buildCmd:String; // the build command to run (this will run with the native path as its working directory; ensure all environment variables are set in order for this command to be successful)
+
+	var ?outputBinaries:Array<String>; // list of binaries that need to be processed; if this isn't provided, anvil will infer what binaries to move
+	// if anvil infers this, it will assume that if any library binary exists, the project was already fully built
+	// otherwise it will compare the directory contents to the outputBinaries to determine if the project is already built
+	//  when determining whether or not to skip compilation
 	// i.e. If using MSVC toolchain, vsdevcmd.bat/vsvars32.bat need to be run in the shell before this.
 	var ?buildArgs:Array<String>; // arguments for the build command. This works like Sys.command or new sys.io.Process, can be omitted (with args in cmd name)
 	var ?verbose:Bool; // pipes the stdout of the build command to the stdout of the haxe build command.
 	var ?libPath:String; // where the binaries are, if not at nativePath
 	var ?includePath:String; // where the headers are if not at nativePath
+	var ?deployInfo:{
+		var type:DeployType; // with-user-output or to-path
+		var ?dest:String; // if to-path, the destination path to put built binaries
+	};
+	var ?alwaysRebuild:Bool; // whether to always rebuild the binaries.
 }
+
 ```
 
 ## Library Authors
