@@ -75,6 +75,8 @@ class Anvil {
 			}
 		}
 		Sys.setCwd(runningDirectory.toString());
+		haxe.Log.trace = _trace;
+
 	}
 
 	static var nativeLibraryDirectory:Path;
@@ -87,8 +89,8 @@ class Anvil {
 	}
 	#end
 
+	static final _trace = haxe.Log.trace;
 	static function init() {
-		final _trace = haxe.Log.trace;
 		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
 			#if macro
 			Context.info(msg, macroPos());
@@ -179,8 +181,6 @@ class Anvil {
 		final ret = (config.outputBinaries == null || config.outputBinaries.length == 0) ? state.libs.length != 0 : config.outputBinaries.foreach(bin ->
 			state.libs.exists((lib:Path) -> lib.file.withExtension(lib.ext)
 			.toLowerCase() == bin.toLowerCase()));
-		if (config.verbose && ret)
-			trace("SKIPPING BUILD STEP");
 		return ret;
 	}
 
@@ -188,6 +188,7 @@ class Anvil {
 		targetOutputDirectory = new Path(Path.join([targetDirectory.toString(), config.libPath]));
 		final initialState = getBuildResults();
 		if (#if macro !Context.defined('--force-anvil') && #end (willSkipBuild(initialState) && !config.disableCache)) {
+			trace('Skipping build for ${config.ammerLib}');
 			return {libs: []};
 		}
 		Sys.setCwd(targetDirectory.toString());
@@ -211,24 +212,25 @@ class Anvil {
 				.map(file -> new Path(FileSystem.fullPath(Path.join([targetOutputDirectory.toString(), file]))))
 				.filter(fp -> libExtensions.indexOf(fp.ext) != -1)}
 	}
-
+	static var warnedAboutOutput = false;
 	static function deployAsDependency(results:BuildResults) {
-		if (config.verbose)
-			trace('Deploying ${results.libs} as dependency');
+
 		var outputDir = "bin";
 		#if macro
 		if (!Context.defined('anvil.output')) {
 			final platform = Context.defined('hl') ? 'hl' : Context.defined('lua') ? 'lua' : Context.defined('cpp') ? 'cpp' : '';
 			outputDir = 'bin\\$platform';
-			if (config.verbose)
-				Context.warning('-D anvil.output flag missing, outputting to default folder "$outputDir"', macroPos());
+			if (config.verbose && !warnedAboutOutput) {
+				warnedAboutOutput = true;
+				Context.warning('-D anvil.output flag missing, outputting to default folder: ${Path.join([runningDirectory.toString(), outputDir])}', macroPos());
+			}
 		} else {
 			outputDir = Context.definedValue('anvil.output');
 		}
 		#else
 		// if()
 		#end
-
+		
 		var fullOutputDir = Path.join([runningDirectory.toString(), outputDir]);
 		if (!FileSystem.exists(fullOutputDir))
 			FileSystem.createDirectory(fullOutputDir);
@@ -236,13 +238,13 @@ class Anvil {
 	}
 
 	static function deployToDirectory(results:BuildResults) {
-		if (config.verbose)
-			trace('Deploying ${results.libs} to ${config.deployInfo.dest}');
+		
 		copyLibsToPath(results, Path.join([runningDirectory.toString(), '${config.deployInfo.dest}']));
 	}
 
 	static function copyLibsToPath(results:BuildResults, deployPath) {
 		for (lib in results.libs) {
+			if(config.verbose) trace('\t${lib.file.withExtension(lib.ext)}\t\t->\t\t$deployPath');
 			copyFile(new Path(FileSystem.fullPath(Path.join([lib.toString()]))),
 				new Path(FileSystem.fullPath(Path.join([deployPath, lib.file.withExtension(lib.ext)]))));
 		}

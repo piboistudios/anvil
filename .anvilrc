@@ -6,6 +6,13 @@
             "buildCmd": "nmake /f Makefile.msvc",
             "verbose": true,
             "disableCache": true
+        },
+        {
+            "ammerLib": "odbc-alt",
+            "nativePath": "native/odbc_native",
+            "buildCmd": "nmake /f Makefile.alt.msvc",
+            "verbose": true,
+            "disableCache": true
         }
     ]
 }
