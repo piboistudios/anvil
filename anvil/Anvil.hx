@@ -2,7 +2,7 @@ package anvil;
 
 import haxe.macro.Compiler;
 import haxe.macro.Context;
-
+import haxe.macro.Expr;
 using Lambda;
 
 import sys.io.File;
@@ -80,7 +80,7 @@ class Anvil {
 	static var configs:Array<AnvilPlatformConfig>;
 
 	#if macro
-	static function macroPos():haxe.macro.Position return {file: config == null ? 'anvil-$platform' : 'anvil-$platform-${config.ammerLib}', max: 0, min: 0}
+	static function macroPos():Position return {file: config == null ? 'anvil-$platform' : 'anvil-$platform-${config.ammerLib}', max: 0, min: 0}
 	#end
 	static function init() {
 		final _trace = haxe.Log.trace;
@@ -92,7 +92,7 @@ class Anvil {
 			#end
 			return;
 		};
-		getConfigs();
+		getConfigs();	`
 		if (configs == null) {
 			trace('Unable to find anvil configuration for the desired platform. $platform.');
 			trace('Aborting');
