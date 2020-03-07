@@ -17,6 +17,13 @@ enum abstract DeployType(String) {
 }
 
 typedef AnvilConfig = {
+	var ?windows:AnvilPlatformConfig;
+	var ?linux:AnvilPlatformConfig;
+	var ?bsd:AnvilPlatformConfig;
+	var ?mac:AnvilPlatformConfig;
+}
+
+typedef AnvilPlatformConfig = {
 	var ammerLib:String; // e.g. what you used to define -D ammer.lib.<ammerLib>.library etc...
 	var nativePath:String; // the path to the native code from the root of your project
 	var buildCmd:String; // the build command to run (this will run with the native path as its working directory; ensure all environment variables are set in order for this command to be successful)
@@ -34,7 +41,7 @@ typedef AnvilConfig = {
 		var type:DeployType; // with-user-output or to-path
 		var ?dest:String; // if to-path, the destination path to put built binaries
 	};
-	var ?alwaysRebuild:Bool; // whether to always rebuild the binaries.
+	var ?disableCache:Bool; // whether build caching is disabled. By default it will rebuild whenever any files in nativePath change
 }
 
 typedef BuildResults = {
@@ -49,7 +56,7 @@ class Anvil {
 	public static function run(?p:haxe.PosInfos) {
 		pos = p;
 		runningDirectory = new Path(Sys.getCwd());
-		init();
+		if(!init()) return;
 		copyNativeToTargetDirectory();
 		var results = buildTargetDirectory();
 		switch config.deployInfo.type {
@@ -62,13 +69,29 @@ class Anvil {
 	}
 
 	static var nativeLibraryDirectory:Path;
+	static var platform = Sys.systemName().toLowerCase();
 
 	static function init() {
+		final _trace = haxe.Log.trace;	
+		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
+			#if macro
+			Compiler.info(msg);
+			#else
+			_trace(msg, pos);
+			#end
+			return;
+		};
 		getLibraryDirectory();
+		if (config == null) {
+			trace('Unable to find anvil configuration for the desired platform. $platform.');
+			trace('Aborting');
+			return false;
+		}
 		getTargetDirectory();
+		return true;
 	}
 
-	static var config:AnvilConfig;
+	static var config:AnvilPlatformConfig;
 
 	static function getLibraryDirectory() {
 		final thisPath = new haxe.io.Path(FileSystem.fullPath(pos.fileName));
@@ -76,6 +99,7 @@ class Anvil {
 		while (!getAnvilConfig(basePath)) {
 			basePath = new Path(FileSystem.fullPath('${basePath.dir}'));
 		}
+		if(config != null)
 		nativeLibraryDirectory = new Path(haxe.io.Path.join([basePath.toString(), config.nativePath]));
 	}
 
@@ -84,7 +108,11 @@ class Anvil {
 		if (!FileSystem.exists(configPath)) {
 			return false;
 		}
-		config = haxe.Json.parse(sys.io.File.getContent(configPath));
+		final globalConfig:haxe.DynamicAccess<Dynamic> = haxe.Json.parse(sys.io.File.getContent(configPath));
+		config = (globalConfig[platform] : Null<AnvilPlatformConfig>);
+		if (config == null)
+			config = globalConfig['all'];
+		if(config == null) return true;
 		config.deployInfo = if (config.deployInfo != null) config.deployInfo else {type: WithUserOutput};
 		return true;
 	}
@@ -100,6 +128,7 @@ class Anvil {
 	}
 
 	static function copyDirectory(dir:Path, dest:Path) {
+		if(dir == null || dest == null) return;
 		if (!FileSystem.exists(dest.toString())) {
 			FileSystem.createDirectory(dest.toString());
 		}
@@ -138,7 +167,7 @@ class Anvil {
 	static function buildTargetDirectory() {
 		targetOutputDirectory = new Path(Path.join([targetDirectory.toString(), config.libPath]));
 		final initialState = getBuildResults();
-		if (#if macro !Context.defined('--force-anvil') && #end (willSkipBuild(initialState) && !config.alwaysRebuild)) {
+		if (#if macro !Context.defined('--force-anvil') && #end (willSkipBuild(initialState) && !config.disableCache)) {
 			return {libs: []};
 		}
 		Sys.setCwd(targetDirectory.toString());

@@ -1,7 +1,9 @@
 {
-    "ammerLib": "odbc",
-    "nativePath": "native/odbc_native",
-    "buildCmd": "nmake /f Makefile.msvc",
-    "verbose":true
-
+    "windows": {
+        "ammerLib": "odbc",
+        "nativePath": "native/odbc_native",
+        "buildCmd": "nmake /f Makefile.msvc",
+        "verbose": true,
+        "disableCache": true
+    }
 }
