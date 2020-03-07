@@ -79,11 +79,14 @@ class Anvil {
 	static var platform = Sys.systemName().toLowerCase();
 	static var configs:Array<AnvilPlatformConfig>;
 
+	#if macro
+	static function macroPos() return {filename: config == null ? 'anvil-$platform' : 'anvil-$platform-${config.ammerLib}', max: 0, min: 0}
+	#end
 	static function init() {
 		final _trace = haxe.Log.trace;
 		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
-			#if macro
-			Context.info(msg, Context.currentPos());
+			#if macrocd 
+			Context.info(msg, macroPos());
 			#else
 			_trace(msg, pos);
 			#end
@@ -213,7 +216,7 @@ class Anvil {
 			final platform = Context.defined('hl') ? 'hl' : Context.defined('lua') ? 'lua' : Context.defined('cpp') ? 'cpp' : '';
 			outputDir = 'bin\\$platform';
 			if (config.verbose)
-				Context.warning('-D anvil.output flag missing, outputting to default folder "$outputDir"', Context.currentPos());
+				Context.warning('-D anvil.output flag missing, outputting to default folder "$outputDir"', macroPos());
 		} else {
 			outputDir = Context.definedValue('anvil.output');
 		}
