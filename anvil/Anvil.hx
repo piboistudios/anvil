@@ -17,10 +17,10 @@ enum abstract DeployType(String) {
 }
 
 typedef AnvilConfig = {
-	var ?windows:AnvilPlatformConfig;
-	var ?linux:AnvilPlatformConfig;
-	var ?bsd:AnvilPlatformConfig;
-	var ?mac:AnvilPlatformConfig;
+	var ?windows:Array<AnvilPlatformConfig>;
+	var ?linux:Array<AnvilPlatformConfig>;
+	var ?bsd:Array<AnvilPlatformConfig>;
+	var ?mac:Array<AnvilPlatformConfig>;
 }
 
 typedef AnvilPlatformConfig = {
@@ -56,23 +56,31 @@ class Anvil {
 	public static function run(?p:haxe.PosInfos) {
 		pos = p;
 		runningDirectory = new Path(Sys.getCwd());
-		if(!init()) return;
-		copyNativeToTargetDirectory();
-		var results = buildTargetDirectory();
-		switch config.deployInfo.type {
-			case DeployType.WithUserOutput:
-				deployAsDependency(results);
-			case ToPath:
-				deployToDirectory(results);
+		if (!init())
+			return;
+		for (c in configs) {
+			config = c;
+			getNativeLibraryDirectory();
+			getTargetDirectory();
+			copyNativeToTargetDirectory();
+			var results = buildTargetDirectory();
+			config.deployInfo = config.deployInfo != null ? config.deployInfo : {type: WithUserOutput};
+			switch config.deployInfo.type {
+				case WithUserOutput:
+					deployAsDependency(results);
+				case ToPath:
+					deployToDirectory(results);
+			}
 		}
 		Sys.setCwd(runningDirectory.toString());
 	}
 
 	static var nativeLibraryDirectory:Path;
 	static var platform = Sys.systemName().toLowerCase();
+	static var configs:Array<AnvilPlatformConfig>;
 
 	static function init() {
-		final _trace = haxe.Log.trace;	
+		final _trace = haxe.Log.trace;
 		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
 			#if macro
 			Compiler.info(msg);
@@ -81,39 +89,41 @@ class Anvil {
 			#end
 			return;
 		};
-		getLibraryDirectory();
-		if (config == null) {
+		getConfigs();
+		if (configs == null) {
 			trace('Unable to find anvil configuration for the desired platform. $platform.');
 			trace('Aborting');
 			return false;
 		}
-		getTargetDirectory();
+
 		return true;
 	}
 
 	static var config:AnvilPlatformConfig;
-
-	static function getLibraryDirectory() {
+	static var basePath:Path;
+	static function getConfigs() {
 		final thisPath = new haxe.io.Path(FileSystem.fullPath(pos.fileName));
-		var basePath = new haxe.io.Path(FileSystem.fullPath('${thisPath.dir}'));
-		while (!getAnvilConfig(basePath)) {
+		basePath = new haxe.io.Path(FileSystem.fullPath('${thisPath.dir}'));
+		while (!getAnvilConfigs(basePath)) {
 			basePath = new Path(FileSystem.fullPath('${basePath.dir}'));
 		}
-		if(config != null)
+	}
+
+	static function getNativeLibraryDirectory() {
 		nativeLibraryDirectory = new Path(haxe.io.Path.join([basePath.toString(), config.nativePath]));
 	}
 
-	static function getAnvilConfig(basePath:Path) {
+	static function getAnvilConfigs(basePath:Path) {
 		var configPath = '$basePath\\.anvilrc';
 		if (!FileSystem.exists(configPath)) {
 			return false;
 		}
 		final globalConfig:haxe.DynamicAccess<Dynamic> = haxe.Json.parse(sys.io.File.getContent(configPath));
-		config = (globalConfig[platform] : Null<AnvilPlatformConfig>);
-		if (config == null)
-			config = globalConfig['all'];
-		if(config == null) return true;
-		config.deployInfo = if (config.deployInfo != null) config.deployInfo else {type: WithUserOutput};
+		configs = globalConfig[platform];
+		if (configs == null)
+			configs = globalConfig['all'];
+		if (configs == null)
+			return true;
 		return true;
 	}
 
@@ -128,7 +138,8 @@ class Anvil {
 	}
 
 	static function copyDirectory(dir:Path, dest:Path) {
-		if(dir == null || dest == null) return;
+		if (dir == null || dest == null)
+			return;
 		if (!FileSystem.exists(dest.toString())) {
 			FileSystem.createDirectory(dest.toString());
 		}
