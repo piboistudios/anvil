@@ -41,7 +41,14 @@ Then in the library's `extraParams.hxml`:
 The `.anvilrc` is just a JSON representation of this Haxe typedef:
 ```haxe
 
-typedef AnvilConfig = {
+typedef AnvilConfig = { // if you don't support a platform, users on that platform will be notifeid and anvil will exit.
+	var ?windows:AnvilPlatformConfig;
+	var ?linux:AnvilPlatformConfig;
+	var ?bsd:AnvilPlatformConfig;
+	var ?mac:AnvilPlatformConfig;
+}
+
+typedef AnvilPlatformConfig = {
 	var ammerLib:String; // e.g. what you used to define -D ammer.lib.<ammerLib>.library etc...
 	var nativePath:String; // the path to the native code from the root of your project
 	var buildCmd:String; // the build command to run (this will run with the native path as its working directory; ensure all environment variables are set in order for this command to be successful)
@@ -59,7 +66,7 @@ typedef AnvilConfig = {
 		var type:DeployType; // with-user-output or to-path
 		var ?dest:String; // if to-path, the destination path to put built binaries
 	};
-	var ?alwaysRebuild:Bool; // whether to always rebuild the binaries.
+	var ?disableCache:Bool; // whether build caching is disabled. By default it will rebuild whenever any files in nativePath change
 }
 
 ```
