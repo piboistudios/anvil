@@ -92,7 +92,7 @@ class Anvil {
 			#end
 			return;
 		};
-		getConfigs();	`
+		getConfigs();	
 		if (configs == null) {
 			trace('Unable to find anvil configuration for the desired platform. $platform.');
 			trace('Aborting');
