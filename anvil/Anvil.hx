@@ -80,7 +80,7 @@ class Anvil {
 	static var configs:Array<AnvilPlatformConfig>;
 
 	#if macro
-	static function macroPos() return {filename: config == null ? 'anvil-$platform' : 'anvil-$platform-${config.ammerLib}', max: 0, min: 0}
+	static function macroPos() return {file: config == null ? 'anvil-$platform' : 'anvil-$platform-${config.ammerLib}', max: 0, min: 0}
 	#end
 	static function init() {
 		final _trace = haxe.Log.trace;
