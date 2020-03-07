@@ -42,10 +42,11 @@ The `.anvilrc` is just a JSON representation of this Haxe typedef:
 ```haxe
 
 typedef AnvilConfig = { // if you don't support a platform, users on that platform will be notifeid and anvil will exit.
-	var ?windows:AnvilPlatformConfig;
-	var ?linux:AnvilPlatformConfig;
-	var ?bsd:AnvilPlatformConfig;
-	var ?mac:AnvilPlatformConfig;
+	// each platform supports an array of configs, allowing library authors to a vast native library eco-system to output a single haxe project if necessary.
+	var ?windows:Array<AnvilPlatformConfig>;
+	var ?linux:Array<AnvilPlatformConfig>;
+	var ?bsd:Array<AnvilPlatformConfig>;
+	var ?mac:Array<AnvilPlatformConfig>;
 }
 
 typedef AnvilPlatformConfig = {
@@ -69,6 +70,33 @@ typedef AnvilPlatformConfig = {
 	var ?disableCache:Bool; // whether build caching is disabled. By default it will rebuild whenever any files in nativePath change
 }
 
+```
+
+ For example, say you create a `native-crypto` library that has different native implementations, you can still use the same Haxe code, just specify different `nativePath`s:
+```json
+{
+    "windows": [
+        {
+            "ammerLib": "native-crypto",
+            "nativePath": "native-win",
+            "buildCmd": "nmake /f Makefile.win"
+        }
+	],
+	"linux": [
+        {
+            "ammerLib": "native-crypto",
+            "nativePath": "native-linux",
+            "buildCmd": "make /f Makefile.linux"
+        }
+	],
+	"mac": [
+		{
+			"ammerLib": "native-crypto",
+            "nativePath": "native-mac",
+            "buildCmd": "make /f Makefile.osx"
+		}
+	]
+}
 ```
 
 ## Library Authors
