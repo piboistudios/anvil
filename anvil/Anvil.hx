@@ -83,7 +83,7 @@ class Anvil {
 		final _trace = haxe.Log.trace;
 		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
 			#if macro
-			Context.info(msg);
+			Context.info(msg, Context.currentPos());
 			#else
 			_trace(msg, pos);
 			#end
@@ -101,6 +101,7 @@ class Anvil {
 
 	static var config:AnvilPlatformConfig;
 	static var basePath:Path;
+
 	static function getConfigs() {
 		final thisPath = new haxe.io.Path(FileSystem.fullPath(pos.fileName));
 		basePath = new haxe.io.Path(FileSystem.fullPath('${thisPath.dir}'));
@@ -212,7 +213,7 @@ class Anvil {
 			final platform = Context.defined('hl') ? 'hl' : Context.defined('lua') ? 'lua' : Context.defined('cpp') ? 'cpp' : '';
 			outputDir = 'bin\\$platform';
 			if (config.verbose)
-				trace('-D anvil.output flag missing, outputting to default folder "$outputDir"');
+				Context.warning('-D anvil.output flag missing, outputting to default folder "$outputDir"', Context.currentPos());
 		} else {
 			outputDir = Context.definedValue('anvil.output');
 		}
