@@ -86,14 +86,14 @@ typedef AnvilPlatformConfig = {
         {
             "ammerLib": "native-crypto",
             "nativePath": "native-linux",
-            "buildCmd": "make /f Makefile.linux"
+            "buildCmd": "make Makefile.linux"
         }
 	],
 	"mac": [
 		{
 			"ammerLib": "native-crypto",
             "nativePath": "native-mac",
-            "buildCmd": "make /f Makefile.osx"
+            "buildCmd": "make Makefile.osx"
 		}
 	]
 }
