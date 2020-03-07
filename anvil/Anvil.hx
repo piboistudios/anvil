@@ -83,7 +83,7 @@ class Anvil {
 		final _trace = haxe.Log.trace;
 		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
 			#if macro
-			Compiler.info(msg);
+			Context.info(msg);
 			#else
 			_trace(msg, pos);
 			#end
