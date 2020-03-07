@@ -3,14 +3,16 @@ package anvil;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+
 using Lambda;
 
 import sys.io.File;
 import sys.FileSystem;
 import haxe.PosInfos;
-
 using haxe.io.Path;
-
+#if macro
+using haxe.macro.PositionTools;
+#end
 enum abstract DeployType(String) {
 	var WithUserOutput = 'with-user-output';
 	var ToPath = 'to-path';
@@ -80,19 +82,22 @@ class Anvil {
 	static var configs:Array<AnvilPlatformConfig>;
 
 	#if macro
-	static function macroPos():Position return {file: config == null ? 'anvil-$platform' : 'anvil-$platform-${config.ammerLib}', max: 0, min: 0}
+	static inline function macroPos() {
+		return PositionTools.make({file: config == null ? 'anvil-$platform' : 'anvil-$platform-${config.ammerLib}', max: 0, min: 0});
+	}
 	#end
+
 	static function init() {
 		final _trace = haxe.Log.trace;
 		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
-			#if macrocd 
+			#if macro
 			Context.info(msg, macroPos());
 			#else
 			_trace(msg, pos);
 			#end
 			return;
 		};
-		getConfigs();	
+		getConfigs();
 		if (configs == null) {
 			trace('Unable to find anvil configuration for the desired platform. $platform.');
 			trace('Aborting');
