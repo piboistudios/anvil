@@ -138,7 +138,7 @@ class Anvil {
 	static function buildTargetDirectory() {
 		targetOutputDirectory = new Path(Path.join([targetDirectory.toString(), config.libPath]));
 		final initialState = getBuildResults();
-		if (#if macro !Context.defined('--force-anvil') || #end (willSkipBuild(initialState) && !config.alwaysRebuild)) {
+		if (#if macro !Context.defined('--force-anvil') && #end (willSkipBuild(initialState) && !config.alwaysRebuild)) {
 			return {libs: []};
 		}
 		Sys.setCwd(targetDirectory.toString());
