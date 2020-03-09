@@ -1,3 +1,6 @@
+-D hxmake-compiler=cl
+-D hxmake-verbose
+-lib hxmake
 -lib tink_unittest
 -lib tink_core
 -cp tests

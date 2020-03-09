@@ -3,13 +3,13 @@
         {
             "ammerLib": "odbc",
             "nativePath": "native/odbc_native",
-            "buildCmd": "nmake /f Makefile.msvc",
+            "hxMakefile": "HxMakefile.test",
             "verbose": true
         },
         {
             "ammerLib": "odbc-alt",
             "nativePath": "native/odbc_native",
-            "buildCmd": "nmake /f Makefile.alt.msvc",
+            "hxMakefile": "HxMakefile.test.2",
             "verbose": true,
             "disableCache": true
         }

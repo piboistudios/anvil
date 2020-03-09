@@ -1,0 +1,4 @@
+# @install: lix --silent download "gh://github.com/piboistudios/hxmake#c3e6d2526b91a4eaf8fae02e3a2d460e6933f21b" into hxmake/0.0.1/github/c3e6d2526b91a4eaf8fae02e3a2d460e6933f21b
+-lib tink_cli
+-cp ${HAXE_LIBCACHE}/hxmake/0.0.1/github/c3e6d2526b91a4eaf8fae02e3a2d460e6933f21b/hxmake
+-D hxmake=0.0.1

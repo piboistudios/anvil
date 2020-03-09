@@ -1,0 +1,8 @@
+-D tink_cli=0.5.0
+# @install: lix --silent download "gh://github.com/haxetink/tink_cli#7c4cf5c5c84b2c01c4cca65563b68296bc7d1b75" into tink_cli/0.5.0/github/7c4cf5c5c84b2c01c4cca65563b68296bc7d1b75
+-lib tink_io
+-lib tink_stringly
+-lib tink_macro
+-cp ${HAXE_LIBCACHE}/tink_cli/0.5.0/github/7c4cf5c5c84b2c01c4cca65563b68296bc7d1b75/src
+# Make sure docs are generated
+-D use-rtti-doc

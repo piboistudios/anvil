@@ -1,3 +1,3 @@
-# @install: lix --silent download "haxelib:/tink_core#1.25.0" into tink_core/1.25.0/haxelib
--cp ${HAXE_LIBCACHE}/tink_core/1.25.0/haxelib/src
--D tink_core=1.25.0
+-D tink_core=1.18.0
+# @install: lix --silent download "gh://github.com/haxetink/tink_core#cb6a569a668dca4a76f69ac0a445f440e03a0d4d" into tink_core/1.18.0/github/cb6a569a668dca4a76f69ac0a445f440e03a0d4d
+-cp ${HAXE_LIBCACHE}/tink_core/1.18.0/github/cb6a569a668dca4a76f69ac0a445f440e03a0d4d/src

@@ -28,7 +28,8 @@ typedef AnvilConfig = {
 typedef AnvilPlatformConfig = {
 	var ammerLib:String; // e.g. what you used to define -D ammer.lib.<ammerLib>.library etc...
 	var nativePath:String; // the path to the native code from the root of your project
-	var buildCmd:String; // the build command to run (this will run with the native path as its working directory; ensure all environment variables are set in order for this command to be successful)
+	var ?hxMakefile:String; // ** NEW ** build your project using an HxMakefile; this assumes the user has HxMake.exe in their PATH
+	var ?buildCmd:String; // the build command to run (this will run with the native path as its working directory; ensure all environment variables are set in order for this command to be successful)
 
 	var ?outputBinaries:Array<String>; // list of binaries that need to be processed; if this isn't provided, anvil will infer what binaries to move
 	// if anvil infers this, it will assume that if any library binary exists, the project was already fully built
@@ -183,6 +184,21 @@ class Anvil {
 			.toLowerCase() == bin.toLowerCase()));
 		return ret;
 	}
+	static function runBuild() {
+		if(config.buildCmd != null) 
+		if (config.verbose)
+			Sys.command(config.buildCmd, config.buildArgs);
+		else
+			new sys.io.Process(config.buildCmd, config.buildArgs).exitCode(true);
+		else if(config.hxMakefile != null) {
+			final hxMakeCompiler = #if eval  haxe.macro.Context.definedValue('hxmake-compiler') #else "gcc" #end;
+			if (config.verbose)
+				Sys.command("hxmake", [config.hxMakefile, hxMakeCompiler, '-v']);
+			else
+				new sys.io.Process("hxmake", [config.hxMakefile, hxMakeCompiler, '-v']);
+		}
+
+	}
 
 	static function buildTargetDirectory() {
 		targetOutputDirectory = new Path(Path.join([targetDirectory.toString(), config.libPath]));
@@ -192,10 +208,8 @@ class Anvil {
 			return {libs: []};
 		}
 		Sys.setCwd(targetDirectory.toString());
-		if (config.verbose)
-			Sys.command(config.buildCmd, config.buildArgs);
-		else
-			new sys.io.Process(config.buildCmd, config.buildArgs).exitCode(true);
+		runBuild();
+		
 		if (!FileSystem.exists(targetDirectory.toString()))
 			FileSystem.createDirectory(targetDirectory.toString());
 
