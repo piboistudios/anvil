@@ -40,9 +40,7 @@ Then in the library's `extraParams.hxml`:
 
 The `.anvilrc` is just a JSON representation of this Haxe typedef:
 ```haxe
-
-typedef AnvilConfig = { // if you don't support a platform, users on that platform will be notifeid and anvil will exit.
-	// each platform supports an array of configs, allowing library authors to a vast native library eco-system to output a single haxe project if necessary.
+typedef AnvilConfig = {
 	var ?windows:Array<AnvilPlatformConfig>;
 	var ?linux:Array<AnvilPlatformConfig>;
 	var ?bsd:Array<AnvilPlatformConfig>;
@@ -52,7 +50,12 @@ typedef AnvilConfig = { // if you don't support a platform, users on that platfo
 typedef AnvilPlatformConfig = {
 	var ammerLib:String; // e.g. what you used to define -D ammer.lib.<ammerLib>.library etc...
 	var nativePath:String; // the path to the native code from the root of your project
-	var buildCmd:String; // the build command to run (this will run with the native path as its working directory; ensure all environment variables are set in order for this command to be successful)
+	var ?hxMakefile:String; // ** NEW ** build your project using an HxMakefile; this assumes the user has HxMake.exe in their PATH
+
+
+	var ?buildCmd:String; // the build command to run (this will run with the native path as its working directory; ensure all environment variables are set in order for this command to be successful)
+
+
 
 	var ?outputBinaries:Array<String>; // list of binaries that need to be processed; if this isn't provided, anvil will infer what binaries to move
 	// if anvil infers this, it will assume that if any library binary exists, the project was already fully built
@@ -64,13 +67,17 @@ typedef AnvilPlatformConfig = {
 	var ?libPath:String; // where the binaries are, if not at nativePath
 	var ?includePath:String; // where the headers are if not at nativePath
 	var ?deployInfo:{
-		var type:DeployType; // with-user-output or to-path
+		var type:DeployType; // 'with-user-output' or 'to-path'
 		var ?dest:String; // if to-path, the destination path to put built binaries
 	};
 	var ?disableCache:Bool; // whether build caching is disabled. By default it will rebuild whenever any files in nativePath change
 }
 
 ```
+If you specify `hxMakefile`, do not specify `buildCmd` (the command to run your hxMakefile *is* the build command), and vice-versa, do not specify `hxMakefile` if you want to run a command at the command line instead of using `HxMake`.
+
+You can read about `HxMakefiles` [here](https://github.com/piboistudios/hxmake)
+
 
  For example, say you create a `native-crypto` library that has different native implementations, you can still use the same Haxe code, just specify different `nativePath`s:
 ```json
@@ -79,21 +86,21 @@ typedef AnvilPlatformConfig = {
         {
             "ammerLib": "native-crypto",
             "nativePath": "native-win",
-            "buildCmd": "nmake /f Makefile.win"
+            "hxMakefile": "HxMakefile.win"
         }
 	],
 	"linux": [
         {
             "ammerLib": "native-crypto",
             "nativePath": "native-linux",
-            "buildCmd": "make Makefile.linux"
+            "hxMakefile": "HxMakefile.linux"
         }
 	],
 	"mac": [
 		{
 			"ammerLib": "native-crypto",
             "nativePath": "native-mac",
-            "buildCmd": "make Makefile.osx"
+            "hxMakefile": "HxMakefile.osx"
 		}
 	]
 }
