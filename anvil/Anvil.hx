@@ -95,7 +95,7 @@ class Anvil {
 
 	static function init() {
 		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
-			#if macro
+			#if (eval && !macro)
 			Context.info(msg, macroPos());
 			#else
 			_trace(msg, pos);
