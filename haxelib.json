@@ -7,5 +7,8 @@
     "version": "0.0.1",
     "classPath": "./",
     "releasenotes": "Initial release",
-    "contributors": ["piboistudios"]
+    "contributors": ["piboistudios"],
+    "dependencies": {
+        "hxmake": ""
+    }
 }
