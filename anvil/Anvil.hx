@@ -9,10 +9,12 @@ using Lambda;
 import sys.io.File;
 import sys.FileSystem;
 import haxe.PosInfos;
+
 using haxe.io.Path;
 #if macro
 using haxe.macro.PositionTools;
 #end
+
 enum abstract DeployType(String) {
 	var WithUserOutput = 'with-user-output';
 	var ToPath = 'to-path';
@@ -77,7 +79,6 @@ class Anvil {
 		}
 		Sys.setCwd(runningDirectory.toString());
 		haxe.Log.trace = _trace;
-
 	}
 
 	static var nativeLibraryDirectory:Path;
@@ -91,6 +92,7 @@ class Anvil {
 	#end
 
 	static final _trace = haxe.Log.trace;
+
 	static function init() {
 		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
 			#if macro
@@ -184,20 +186,43 @@ class Anvil {
 			.toLowerCase() == bin.toLowerCase()));
 		return ret;
 	}
-	static function runBuild() {
-		if(config.buildCmd != null) 
-		if (config.verbose)
-			Sys.command(config.buildCmd, config.buildArgs);
-		else
-			new sys.io.Process(config.buildCmd, config.buildArgs).exitCode(true);
-		else if(config.hxMakefile != null) {
-			final hxMakeCompiler = #if eval  haxe.macro.Context.definedValue('hxmake-compiler') #else "gcc" #end;
-			if (config.verbose)
-				Sys.command("hxmake", [config.hxMakefile, hxMakeCompiler, '-v']);
-			else
-				new sys.io.Process("hxmake", [config.hxMakefile, hxMakeCompiler, '-v']);
-		}
 
+	static function runCmd(cmd:String, args:Array<String>, ?verbose:Bool):Void {
+		function newProcess(c, a) {
+			return new sys.io.Process(c, a).exitCode(true);
+		};
+		(verbose ? Sys.command : newProcess)(cmd, args);
+	}
+
+	static function runBuild() {
+		trace(Sys.getCwd());
+		if (config.buildCmd != null)
+			if (config.verbose)
+				Sys.command(config.buildCmd, config.buildArgs);
+			else
+				new sys.io.Process(config.buildCmd, config.buildArgs).exitCode(true);
+		else if (config.hxMakefile != null) {
+			var hxMakeCompiler = #if eval haxe.macro.Context.definedValue('hxmake-compiler') #else "gcc" #end;
+			if(hxMakeCompiler == null) hxMakeCompiler = 'gcc';
+			#if macro
+			Compiler.define(~/[,-.\s]/gi.replace('hxmake_$hxMakeCompiler', '_'));
+			#end
+			final lixLibCache = Sys.getEnv('HAXE_LIBCACHE');
+			final useLix = lixLibCache != null && lixLibCache.length != 0;
+			var cmd = "";
+			var args = [];
+			if (useLix) {
+				cmd = 'lix';
+				args = ['run', 'hxmake', config.hxMakefile, hxMakeCompiler, '-v'];
+			} else {
+				cmd = 'haxelib';
+				args = ['run', 'hxmake', config.hxMakefile, hxMakeCompiler, '-v'];
+			}
+			if (config.verbose)
+				Sys.command("lix", ['run','hxmake', config.hxMakefile, hxMakeCompiler, '-v']);
+			else
+				new sys.io.Process("lix", ['run','hxmake', config.hxMakefile, hxMakeCompiler, '-v']);
+		}
 	}
 
 	static function buildTargetDirectory() {
@@ -209,7 +234,7 @@ class Anvil {
 		}
 		Sys.setCwd(targetDirectory.toString());
 		runBuild();
-		
+
 		if (!FileSystem.exists(targetDirectory.toString()))
 			FileSystem.createDirectory(targetDirectory.toString());
 
@@ -226,9 +251,10 @@ class Anvil {
 				.map(file -> new Path(FileSystem.fullPath(Path.join([targetOutputDirectory.toString(), file]))))
 				.filter(fp -> libExtensions.indexOf(fp.ext) != -1)}
 	}
-	static var warnedAboutOutput = false;
-	static function deployAsDependency(results:BuildResults) {
 
+	static var warnedAboutOutput = false;
+
+	static function deployAsDependency(results:BuildResults) {
 		var outputDir = "bin";
 		#if macro
 		if (!Context.defined('anvil.output')) {
@@ -236,7 +262,8 @@ class Anvil {
 			outputDir = 'bin\\$platform';
 			if (config.verbose && !warnedAboutOutput) {
 				warnedAboutOutput = true;
-				Context.warning('-D anvil.output flag missing, outputting to default folder: ${Path.join([runningDirectory.toString(), outputDir])}', macroPos());
+				Context.warning('-D anvil.output flag missing, outputting to default folder: ${Path.join([runningDirectory.toString(), outputDir])}',
+					macroPos());
 			}
 		} else {
 			outputDir = Context.definedValue('anvil.output');
@@ -244,7 +271,7 @@ class Anvil {
 		#else
 		// if()
 		#end
-		
+
 		var fullOutputDir = Path.join([runningDirectory.toString(), outputDir]);
 		if (!FileSystem.exists(fullOutputDir))
 			FileSystem.createDirectory(fullOutputDir);
@@ -252,13 +279,13 @@ class Anvil {
 	}
 
 	static function deployToDirectory(results:BuildResults) {
-		
 		copyLibsToPath(results, Path.join([runningDirectory.toString(), '${config.deployInfo.dest}']));
 	}
 
 	static function copyLibsToPath(results:BuildResults, deployPath) {
 		for (lib in results.libs) {
-			if(config.verbose) trace('\t${lib.file.withExtension(lib.ext)}\t\t->\t\t$deployPath');
+			if (config.verbose)
+				trace('\t${lib.file.withExtension(lib.ext)}\t\t->\t\t$deployPath');
 			copyFile(new Path(FileSystem.fullPath(Path.join([lib.toString()]))),
 				new Path(FileSystem.fullPath(Path.join([deployPath, lib.file.withExtension(lib.ext)]))));
 		}

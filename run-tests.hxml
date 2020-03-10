@@ -1,13 +1,8 @@
--D hxmake-compiler=cl
--D hxmake-verbose
+-D hxmake-compiler=gcc
 -lib hxmake
 -lib tink_unittest
 -lib tink_core
 -cp tests
 -main RunTests
---each
---macro RunTests.run()
+--macro RunTests.prerun()
 --interp
-# --next
-# -D hl=true
-# --interp

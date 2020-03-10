@@ -4,12 +4,6 @@
             "ammerLib": "odbc",
             "nativePath": "native/odbc_native",
             "hxMakefile": "HxMakefile.test",
-            "verbose": true
-        },
-        {
-            "ammerLib": "odbc-alt",
-            "nativePath": "native/odbc_native",
-            "hxMakefile": "HxMakefile.test.2",
             "verbose": true,
             "disableCache": true
         }
