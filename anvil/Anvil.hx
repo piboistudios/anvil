@@ -195,15 +195,15 @@ class Anvil {
 	}
 
 	static function runBuild() {
-		trace(Sys.getCwd());
 		if (config.buildCmd != null)
-			if (config.verbose)
+			if (config.verbose #if eval || true #end)
 				Sys.command(config.buildCmd, config.buildArgs);
 			else
 				new sys.io.Process(config.buildCmd, config.buildArgs).exitCode(true);
 		else if (config.hxMakefile != null) {
 			var hxMakeCompiler = #if eval haxe.macro.Context.definedValue('hxmake-compiler') #else "gcc" #end;
-			if(hxMakeCompiler == null) hxMakeCompiler = 'gcc';
+			if (hxMakeCompiler == null)
+				hxMakeCompiler = 'gcc';
 			#if macro
 			Compiler.define(~/[,-.\s]/gi.replace('hxmake_$hxMakeCompiler', '_'));
 			#end
@@ -218,10 +218,12 @@ class Anvil {
 				cmd = 'haxelib';
 				args = ['run', 'hxmake', config.hxMakefile, hxMakeCompiler, '-v'];
 			}
-			if (config.verbose)
-				Sys.command("lix", ['run','hxmake', config.hxMakefile, hxMakeCompiler, '-v']);
-			else
-				new sys.io.Process("lix", ['run','hxmake', config.hxMakefile, hxMakeCompiler, '-v']);
+			
+				if (config.verbose #if eval || true #end) 
+					Sys.command(cmd, args);
+				else
+					new sys.io.Process(cmd, args).exitCode(true);
+		
 		}
 	}
 
