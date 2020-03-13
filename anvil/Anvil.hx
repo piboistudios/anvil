@@ -76,7 +76,7 @@ class Anvil {
 				lastBuild = Date.fromString(sys.io.File.getContent(LAST_BUILD_FILE));
 			} catch(ex:Dynamic) {
 				#if macro
-				Compiler.warning('Unable to read last build time. Will rebuild. (Error: $ex)');
+				Context.warning('Unable to read last build time. Will rebuild. (Error: $ex)');
 				#end
 			}
 		}
