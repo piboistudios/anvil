@@ -1,4 +1,3 @@
--D hxmake-compiler=gcc
 -lib hxmake
 -lib tink_unittest
 -lib tink_core

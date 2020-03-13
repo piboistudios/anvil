@@ -95,7 +95,7 @@ class Anvil {
 
 	static function init() {
 		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
-			#if (eval && !macro)
+			#if (macro)
 			Context.info(msg, macroPos());
 			#else
 			_trace(msg, pos);
@@ -201,9 +201,9 @@ class Anvil {
 			else
 				new sys.io.Process(config.buildCmd, config.buildArgs).exitCode(true);
 		else if (config.hxMakefile != null) {
-			var hxMakeCompiler = #if eval haxe.macro.Context.definedValue('hxmake-compiler') #else "gcc" #end;
+			var hxMakeCompiler = #if eval haxe.macro.Context.definedValue('hxmake-compiler') #else Sys.systemName().toLowerCase() == 'windows' ? 'cl' ? 'gcc' #end;
 			if (hxMakeCompiler == null)
-				hxMakeCompiler = 'gcc';
+				hxMakeCompiler = 'cl';
 			#if macro
 			Compiler.define(~/[,-.\s]/gi.replace('hxmake_$hxMakeCompiler', '_'));
 			#end

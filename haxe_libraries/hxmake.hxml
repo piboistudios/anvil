@@ -1,7 +1,7 @@
-# @install: lix --silent download "gh://github.com/piboistudios/hxmake#9a6ddb61e1ac09cb80b24ce6edfa749da80d8cca" into hxmake/0.0.1/github/9a6ddb61e1ac09cb80b24ce6edfa749da80d8cca
-# @run: haxelib run-dir hxmake ${HAXE_LIBCACHE}/hxmake/0.0.1/github/9a6ddb61e1ac09cb80b24ce6edfa749da80d8cca
+-D hxmake=0.0.1
+# @install: lix --silent download "gh://github.com/piboistudios/hxmake#289a39a5d6f25fb201604f78c0c2c20595fef1b2" into hxmake/0.0.1/github/289a39a5d6f25fb201604f78c0c2c20595fef1b2
+# @run: haxelib run-dir hxmake ${HAXE_LIBCACHE}/hxmake/0.0.1/github/289a39a5d6f25fb201604f78c0c2c20595fef1b2
 -lib tink_cli
 -lib tink_io
 -lib tink_stringly
--cp ${HAXE_LIBCACHE}/hxmake/0.0.1/github/9a6ddb61e1ac09cb80b24ce6edfa749da80d8cca/./
--D hxmake=0.0.1
+-cp ${HAXE_LIBCACHE}/hxmake/0.0.1/github/289a39a5d6f25fb201604f78c0c2c20595fef1b2/./
