@@ -5,7 +5,7 @@
             "nativePath": "native/odbc_native",
             "hxMakefile": "HxMakefile.test",
             "verbose": true,
-            "disableCache": true
+            "cacheMode": "on-change"
         }
     ]
 }

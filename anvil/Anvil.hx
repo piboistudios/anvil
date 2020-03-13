@@ -15,7 +15,7 @@ using haxe.io.Path;
 using haxe.macro.PositionTools;
 #end
 
-enum abstract DeployType(String) {
+enum abstract DeployType(String)  from String to String {
 	var WithUserOutput = 'with-user-output';
 	var ToPath = 'to-path';
 }
@@ -46,9 +46,16 @@ typedef AnvilPlatformConfig = {
 		var type:DeployType; // with-user-output or to-path
 		var ?dest:String; // if to-path, the destination path to put built binaries
 	};
-	var ?disableCache:Bool; // whether build caching is disabled. By default it will rebuild whenever any files in nativePath change
+	var ?cacheMode:CacheMode; // cache mode, either always, on-change, or never.
+			// on-change will rebuild whenever the source files are changed
+					// this is the default setting
 }
 
+enum abstract CacheMode(String) from String to String {
+	var OnChange = 'on-change';
+	var Never = 'never';
+	var Always = 'always';
+}
 typedef BuildResults = {
 	var libs:Array<Path>; // list of dynamic library binaries/object files
 }
@@ -57,10 +64,22 @@ class Anvil {
 	static var runningDirectory:Path;
 	static var haxelibPath = Sys.getEnv('HAXELIB_PATH');
 	static var pos:PosInfos;
-
+	static var lastBuild:Date;
+	static var LAST_BUILD_FILE = './anvil.lastbuild.txt';
 	public static function run(?p:haxe.PosInfos) {
 		pos = p;
 		runningDirectory = new Path(Sys.getCwd());
+		if(sys.FileSystem.exists(LAST_BUILD_FILE)) {
+			try {
+
+				lastBuild = Date.fromString(sys.io.File.getContent(LAST_BUILD_FILE));
+			} catch(ex:Dynamic) {
+				#if macro
+				Compiler.warning('Unable to read last build time. Will rebuild. (Error: $ex)');
+				#end
+			}
+		}
+		sys.io.File.saveContent(LAST_BUILD_FILE, Date.now().toString());
 		if (!init())
 			return;
 		for (c in configs) {
@@ -95,11 +114,14 @@ class Anvil {
 
 	static function init() {
 		haxe.Log.trace = (msg, ?pos:haxe.PosInfos) -> {
-			#if (macro)
-			Context.info(msg, macroPos());
-			#else
-			_trace(msg, pos);
-			#end
+			if(config.verbose) {
+
+				#if (macro)
+				Context.info(msg, macroPos());
+				#else
+				_trace(msg, pos);
+				#end
+			}
 			return;
 		};
 		getConfigs();
@@ -177,13 +199,47 @@ class Anvil {
 		Compiler.define(ammerLibraryDefine, Path.join([targetDirectory.toString(), config.libPath]));
 		#end
 	}
-
+	
+	static function getSourceFiles() {
+		final ret = [];
+		inline function addFile(path, file) ret.push(FileSystem.fullPath(Path.join([path, file])));
+		for(file in FileSystem.readDirectory('$nativeLibraryDirectory')) {
+			addFile('$nativeLibraryDirectory', file);
+		}
+		if(config.includePath != null && config.includePath.length != 0) {
+			final nativeIncludes = Path.join(['$nativeLibraryDirectory', config.includePath]);
+			for(file in FileSystem.readDirectory(nativeIncludes)) {
+				addFile(nativeIncludes, file);
+			}
+		}
+		return ret;
+	}
+	static function sourcesWereChanged() {
+		final ret = lastBuild == null || !getSourceFiles().foreach(file -> {
+			final stat = sys.FileSystem.stat(file);
+			return stat.mtime.getTime() < lastBuild.getTime();
+		});
+		if(ret) trace('A change was detected; rebuilding');
+		return ret;
+	}
 	static var targetOutputDirectory:Path;
 
 	static function willSkipBuild(state:BuildResults) {
-		final ret = (config.outputBinaries == null || config.outputBinaries.length == 0) ? state.libs.length != 0 : config.outputBinaries.foreach(bin ->
-			state.libs.exists((lib:Path) -> lib.file.withExtension(lib.ext)
-			.toLowerCase() == bin.toLowerCase()));
+		final ret = (switch config.cacheMode {
+			case Never: true;
+			case OnChange: !sourcesWereChanged();
+			case Always: false;
+			default: !sourcesWereChanged();
+		}) && 
+		(config.outputBinaries == null 
+			|| config.outputBinaries.length == 0) 
+			? 
+				state.libs.length != 0 : 
+				config.outputBinaries != null && config.outputBinaries.foreach(bin ->
+					state.libs.exists((lib:Path) -> lib.file.withExtension(lib.ext)
+						.toLowerCase() == bin.toLowerCase()
+					)
+				);
 		return ret;
 	}
 
@@ -209,14 +265,15 @@ class Anvil {
 			#end
 			final lixLibCache = Sys.getEnv('HAXE_LIBCACHE');
 			final useLix = lixLibCache != null && lixLibCache.length != 0;
+			final verbose = config.verbose ? '-v' : '';
 			var cmd = "";
 			var args = [];
 			if (useLix) {
 				cmd = 'lix';
-				args = ['run', 'hxmake', config.hxMakefile, hxMakeCompiler, '-v'];
+				args = ['run', 'hxmake', config.hxMakefile, hxMakeCompiler, verbose];
 			} else {
 				cmd = 'haxelib';
-				args = ['run', 'hxmake', config.hxMakefile, hxMakeCompiler, '-v'];
+				args = ['run', 'hxmake', config.hxMakefile, hxMakeCompiler, verbose];
 			}
 			
 				if (config.verbose #if eval || true #end) 
@@ -230,7 +287,7 @@ class Anvil {
 	static function buildTargetDirectory() {
 		targetOutputDirectory = new Path(Path.join([targetDirectory.toString(), config.libPath]));
 		final initialState = getBuildResults();
-		if (#if macro !Context.defined('--force-anvil') && #end (willSkipBuild(initialState) && !config.disableCache)) {
+		if (#if macro !Context.defined('--force-anvil') && #end willSkipBuild(initialState)) {
 			trace('Skipping build for ${config.ammerLib}');
 			return {libs: []};
 		}

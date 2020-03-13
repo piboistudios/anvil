@@ -14,6 +14,7 @@ extern "C" {
 #include <sqltypes.h>
 #include <stdlib.h>
 #include <stdbool.h>
+// change here
 	typedef struct {
 		char** errors;
 		char error_str[2048];

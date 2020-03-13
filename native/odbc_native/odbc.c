@@ -3,7 +3,7 @@
 #include "odbc.h"
 #include <stdio.h>
 #include <time.h>
-
+// a change was made here
 void extract_error(
 	odbc_errors_ptr ctx, 
 	char* fn,
