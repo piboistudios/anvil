@@ -1,0 +1,4 @@
+-lib odbc32
+-src odbc.c
+-o odbc.dll
+-win-api

@@ -2,4 +2,5 @@
 *.exp
 *.obj
 *.lib
-native_extensions/**
+native_extensions/**
+./anvil.lastbuild.txt

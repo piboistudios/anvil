@@ -65,6 +65,7 @@ class Anvil {
 	static var haxelibPath = Sys.getEnv('HAXELIB_PATH');
 	static var pos:PosInfos;
 	static var lastBuild:Date;
+	static var endl = Sys.systemName() == 'Windows' ? '\r\n' : '\n';
 	static var LAST_BUILD_FILE = './anvil.lastbuild.txt';
 	public static function run(?p:haxe.PosInfos) {
 		pos = p;
@@ -80,6 +81,13 @@ class Anvil {
 			}
 		}
 		sys.io.File.saveContent(LAST_BUILD_FILE, Date.now().toString());
+		if(FileSystem.exists('./.gitignore'))
+			if(sys.io.File.getContent('./.gitignore').indexOf(LAST_BUILD_FILE) == -1) {
+				var appender = sys.io.File.append('./.gitignore', false);
+				appender.writeString('$endl$LAST_BUILD_FILE$endl');
+				appender.flush();
+				appender.close();
+			}
 		if (!init())
 			return;
 		for (c in configs) {

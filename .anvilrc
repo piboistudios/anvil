@@ -4,8 +4,7 @@
             "ammerLib": "odbc",
             "nativePath": "native/odbc_native",
             "hxMakefile": "HxMakefile.test",
-            "verbose": true,
-            "cacheMode": "on-change"
+            "verbose": true
         }
     ]
 }
