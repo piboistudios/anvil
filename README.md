@@ -50,7 +50,7 @@ typedef AnvilConfig = {
 typedef AnvilPlatformConfig = {
 	var ammerLib:String; // e.g. what you used to define -D ammer.lib.<ammerLib>.library etc...
 	var nativePath:String; // the path to the native code from the root of your project
-	var ?hxMakefile:String; // ** NEW ** build your project using an HxMakefile; this assumes the user has HxMake.exe in their PATH
+	var ?hxMakefile:String; // ** NEW ** build your project using an HxMakefile; this will attempt to use haxelib run hxmake <hxMakefile> <hxmake-compiler|gcc by default> or lix run hxmake etc.. if you have lix installed.
 
 
 	var ?buildCmd:String; // the build command to run (this will run with the native path as its working directory; ensure all environment variables are set in order for this command to be successful)
